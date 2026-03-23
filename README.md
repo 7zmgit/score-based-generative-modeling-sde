@@ -8,7 +8,7 @@ I train a neural network via denoising score matching to approximate the score f
 
 ## Focus
 
-The main goal is to study the **numerical behavior of reverse-time sampling**, specifically:
+The main goal is to study the numerical behavior of reverse-time sampling, specifically:
 
 - how the number of discretization steps affects sample quality  
 - how the diffusion scale (σ) influences stability  
