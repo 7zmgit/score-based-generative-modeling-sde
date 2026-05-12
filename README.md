@@ -7,7 +7,7 @@ Score-based generative models turn Gaussian noise into images by simulating a re
 But each Langevin step costs another neural-network evaluation, so PC trades compute for quality. So, I thought of the next question.
 
 ## The question
-Does Predictor-Corrector still win when both samplers get the same compute budget?
+Does Predictor–Corrector still outperform Euler–Maruyama when both samplers use the same number of score-network evaluations?
 
 ## What I did
 - Trained a small (~1.6M param) U-Net (convolutional neural network type) on MNIST for 15 epochs using denoising score matching
