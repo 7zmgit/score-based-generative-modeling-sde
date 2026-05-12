@@ -2,7 +2,7 @@
 
 **Author:** Hazem Ajlan
 
-Generating an image with a score-based model means simulating a reverse-time SDE that turns Gaussian noise into data. The simplest way to do this is the **Euler–Maruyama (EM)** method discretize time, take one step at a time, done. Song et al. propose a more sophisticated **Predictor–Corrector (PC)** sampler that adds extra Langevin MCMC steps at each noise level, and report that it gives better samples on CIFAR-10.
+Score-based models generate images by reversing a Gaussian noise process via a Stochastic Differential Equation (SDE). While the Euler–Maruyama method provides a simple discretization, Song et al.'s Predictor–Corrector (PC) sampler improves sample quality on CIFAR-10 by adding Langevin MCMC steps.
 
 ## The experiment
 But each Langevin step costs another neural-network evaluation. So a fair comparison has to fix the total number of score evaluations (NFE) and ask whether the corrector steps earn their cost.
