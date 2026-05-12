@@ -32,7 +32,7 @@ FID, lower is better. Mean ± std over 3 seeds in the full report.
 
 The gap is dramatic at intermediate budgets; at NFE 481, EM is roughly 12× better than PC(M=1). At the largest budget the gap narrows but doesn't close. Adding more corrector steps (M=2) consistently makes things worse, not better.
 
-My best guess for *why*: with a small score model trained briefly, the score function has meaningful error. The Langevin corrector runs MCMC toward the stationary distribution of the *learned* score, not the true one, so running it harder amplifies the error rather than correcting it. With a large, well-trained model (like the paper's CIFAR-10 setup) the score error is small enough that PC helps. With my setup, it hurts.
+My best guess for why: with a small score model trained briefly, the score function has meaningful error. The Langevin corrector runs MCMC toward the stationary distribution of the *learned* score, not the true one, so running it harder amplifies the error rather than correcting it. With a large, well-trained model (like the paper's CIFAR-10 setup) the score error is small enough that PC helps. With my setup, it hurts.
 
 In the report, I include more detail and discuss the limitations.
 
