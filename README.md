@@ -2,79 +2,37 @@
 
 **Author:** Hazem Ajlan
 
-After reading Song et al.’s paper *Score-Based Generative Modeling through Stochastic Differential Equations* many times, I thought of this question: 
-> Predictor–Corrector sampling sounds better than plain Euler–Maruyama; but is it still better if both samplers get the same compute budget?
+Generating an image with a score-based model means simulating a reverse-time SDE that turns Gaussian noise into data. The simplest way to do this is the **Euler–Maruyama (EM)** method discretize time, take one step at a time, done. Song et al. propose a more sophisticated **Predictor–Corrector (PC)** sampler that adds extra Langevin MCMC steps at each noise level, and report that it gives better samples on CIFAR-10.
 
-That question drives this project. I train a small variance-exploding (VE) score-based generative model on the MNIST (handwritten digits) dataset, then compare two reverse-time samplers:
+## The experiment
+But each Langevin step costs another neural-network evaluation. So a fair comparison has to fix the total number of score evaluations (NFE) and ask whether the corrector steps earn their cost.
 
-- **Euler–Maruyama (EM):** spend every score-network call on moving through the reverse SDE.
-- **Predictor–Corrector (PC):** spend some score-network calls on Langevin correction steps.
+## What I did
+- Trained a small (~1.6M param) U-Net on MNIST for 15 epochs using denoising score matching
+- Implemented Euler-Maruyama to match the official code & Predictor-Corrector to match the paper's algorithm
+- Tuned the SNR hyperparameter for PC separately for `M=1` and `M=2` corrector steps
+- Compared Euler-Maruyama vs Predictor-Corrector (M=1) vs Predictor-Corrector (M=2) at four matched NFE budgets, 3 seeds each
+- Verified PC reduces to EM in the M=0 limit (sanity check)
+- Evaluated with FID against 10,000 real MNIST test images
+  
+## What I found
 
-Since score-network evaluations are the expensive part of sampling, I compare the samplers at matched number of score-function evaluations a.k.a **NFE**.
+**EM beats PC at every compute budget tested.** This is the opposite of the paper's CIFAR-10 result.
 
----
-
-## What this repo contains
-
-- A time-conditioned U-Net (Convolutional Neural Network type) score model, around 1.6M parameters
-- VE-SDE training on MNIST using denoising score matching
-- Euler–Maruyama sampling
-- Predictor–Corrector sampling with `M=1` and `M=2` corrector steps
-- Final Tweedie denoising for all samplers
-- SNR tuning for the PC corrector
-- A matched-NFE FID comparison
-- A sanity check showing that PC with `M=0` behaves like EM
----
-
-## The main result
-
-In this setup, **Euler–Maruyama wins**.
-
-| NFE | EM FID | PC (M=1) FID | PC (M=2) FID |
-|----:|-------:|-------------:|-------------:|
+| NFE | EM | PC (M=1) | PC (M=2) |
+|----:|---:|---------:|---------:|
 | 121 | 236.16 | 357.58 | 378.47 |
 | 241 | 141.70 | 232.40 | 311.98 |
 | 481 | **11.71** | 138.85 | 182.23 |
 | 961 | **10.86** | 17.76 | 99.37 |
 
-Lower FID is better. The full report includes standard deviations over 3 seeds.
+FID, lower is better. Mean ± std over 3 seeds in the full report.
 
-The surprising part is not just that PC loses. It loses even after tuning the corrector SNR separately for `M=1` and `M=2`.
+The gap is dramatic at intermediate budgets; at NFE 481, EM is roughly 12× better than PC(M=1). At the largest budget the gap narrows but doesn't close. Adding more corrector steps (M=2) consistently makes things worse, not better.
 
-So my takeaway is:
+My best guess for *why*: with a small score model trained briefly, the score function has meaningful error. The Langevin corrector runs MCMC toward the stationary distribution of the *learned* score, not the true one, so running it harder amplifies the error rather than correcting it. With a large, well-trained model (like the paper's CIFAR-10 setup) the score error is small enough that PC helps. With my setup, it hurts.
 
-> For this small MNIST VE-SDE model, the score evaluations spent on Langevin corrector steps were better spent on more Euler–Maruyama predictor steps.
-
----
-
-Song et al.’s paper reports strong results for PC on larger natural-image settings. My result does **not** contradict that in general. It just shows that PC is not automatically better once you charge it fairly for the extra score-network evaluations.
-
----
-
-## My hypothesis
-
-The corrector uses Langevin dynamics based on the learned score model. If the score model is imperfect, the corrector may refine samples toward the distribution implied by the learned score, not the true noisy data distribution.
-
-So in a small model trained briefly, running more corrector steps might amplify score-model errors instead of fixing sampling errors.
-
-That is only a hypothesis. I did not directly measure score bias here. But it fits the observation that `M=2` is usually worse than `M=1`.
-
----
-
-## Sanity check
-
-To make sure PC was not simply implemented incorrectly, I tested the `M=0` case.
-
-When `M=0`, PC has no corrector steps, so it should reduce to Euler–Maruyama.
-
-At `N = P = 240`:
-
-| Sampler | FID |
-|--------:|----:|
-| EM | 147.376 |
-| PC, M=0 | 147.745 |
-
-The difference is tiny relative to the FID scale, so the predictor path and NFE accounting appear consistent.
+In the report, I include more detail and discuss the limitations.
 
 ---
 
@@ -92,8 +50,6 @@ report.pdf Full write-up
 pip install torch torchvision pytorch-fid tqdm matplotlib
 # Then open code/main.ipynb in Colab or Jupyter
 ```
-
-A GPU helps a lot. The full pipeline (train + tune + sweep) is ~45 minutes on an L4.
 
 ## References
 
