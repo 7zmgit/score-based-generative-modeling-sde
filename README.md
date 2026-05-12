@@ -2,10 +2,12 @@
 
 **Author:** Hazem Ajlan
 
-Score-based models generate images by reversing a Gaussian noise process via a Stochastic Differential Equation (SDE). While the Euler–Maruyama method provides a simple discretization, Song et al.'s Predictor–Corrector (PC) sampler improves sample quality on CIFAR-10 by adding Langevin MCMC steps.
+Score-based generative models turn Gaussian noise into images by simulating a reverse-time stochastic differential equation. The simplest way to do this is the Euler–Maruyama (EM) method. Song et al. (2021) propose an alternative, the **Predictor–Corrector (PC)** sampler, which adds Langevin MCMC steps at each noise level and report that it gives better samples on CIFAR-10.
 
-## The experiment
-But each Langevin step costs another neural-network evaluation. So a fair comparison has to fix the total number of score evaluations (NFE) and ask whether the corrector steps earn their cost.
+Sounds great. But each Langevin step costs another neural-network evaluation, so PC trades compute for quality. So,
+
+## The question
+Does Predictor-Corrector still win when both samplers get the same compute budget?
 
 ## What I did
 - Trained a small (~1.6M param) U-Net on MNIST for 15 epochs using denoising score matching
