@@ -2,7 +2,7 @@
 
 **Author:** Hazem Ajlan
 
-Score-based generative models turn Gaussian noise into images by simulating a reverse-time stochastic differential equation. The simplest way to do this is the Euler–Maruyama method. Song et al. (2021) propose an alternative, the **Predictor–Corrector (PC)** sampler, which adds Langevin MCMC steps at each noise level and report that it gives better samples on CIFAR-10.
+Score-based generative models turn Gaussian noise into images by simulating a reverse-time stochastic differential equation. The simplest way to do this is the Euler–Maruyama method. Alternatively, Song et al. (2020) propose the Predictor–Corrector (PC) sampler, which adds Langevin MCMC steps at each noise level and report that it gives better samples on CIFAR-10.
 
 Sounds great. But each Langevin step costs another neural-network evaluation, so PC trades compute for quality. So,
 
