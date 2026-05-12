@@ -1,42 +1,47 @@
-# Score-Based Generative Modeling: Predictor–Corrector vs. Euler–Maruyama
+# Score-Based Sampling on MNIST: Euler–Maruyama vs. Predictor–Corrector
 
 **Author:** Hazem Ajlan
 
-A small empirical study of two ways to sample from a score-based generative model trained on MNIST. The model and forward process follow Song et al. (2021), using a variance-exploding SDE. The interesting part is the comparison between samplers: **does the fancier Predictor–Corrector sampler actually beat plain Euler–Maruyama when you give them the same compute budget?**
+This repository contains a small empirical study of reverse-time sampling for score-based generative models. I train a variance-exploding (VE) score model on MNIST and compare Euler–Maruyama (EM) sampling with Predictor–Corrector (PC) sampling under matched numbers of score-function evaluations (NFE).
 
-## The question
+The goal is not to reproduce state-of-the-art results. The goal is to test a narrower question:
 
-Generating an image with a score-based model means simulating a reverse-time SDE that turns Gaussian noise into data. The simplest way to do this is the **Euler–Maruyama (EM)** method — discretize time, take one step at a time, done. Song et al. propose a more sophisticated **Predictor–Corrector (PC)** sampler that adds extra Langevin MCMC steps at each noise level, and report that it gives better samples on CIFAR-10.
+> If score-network evaluations are the main sampling cost, is it better to spend them on more Euler–Maruyama predictor steps, or to trade some of them for Langevin corrector steps?
 
-But each Langevin step costs another neural-network evaluation. So a fair comparison has to fix the total number of score evaluations (NFE) and ask whether the corrector steps earn their cost. That's the experiment here.
+## What is implemented
 
-## What I did
+- VE-SDE score model on MNIST
+- Small time-conditioned U-Net score network (~1.6M parameters)
+- Continuous-time denoising score matching
+- Euler–Maruyama sampler
+- Predictor–Corrector sampler with `M=1` and `M=2` corrector steps
+- Final Tweedie denoising for all samplers
+- SNR tuning for PC
+- Matched-NFE FID comparison
+- `M=0` sanity check showing that PC reduces to EM when no corrector steps are used
 
-- Trained a small (~1.6M param) U-Net on MNIST for 15 epochs using denoising score matching
-- Implemented both samplers, matching the official reference code line-for-line
-- Tuned the SNR hyperparameter for PC separately for `M=1` and `M=2` corrector steps
-- Compared EM vs PC(M=1) vs PC(M=2) at four matched NFE budgets, 3 seeds each
-- Verified PC reduces to EM in the M=0 limit (sanity check)
-- Evaluated with FID against 10,000 real MNIST test images
+## Main result
 
-## What I found
+In this MNIST setup, EM outperforms PC at every matched NFE budget tested.
 
-**EM beats PC at every compute budget tested.** This is the opposite of the paper's CIFAR-10 result.
-
-| NFE | EM | PC (M=1) | PC (M=2) |
-|----:|---:|---------:|---------:|
+| NFE | EM FID | PC (M=1) FID | PC (M=2) FID |
+|----:|-------:|-------------:|-------------:|
 | 121 | 236.16 | 357.58 | 378.47 |
 | 241 | 141.70 | 232.40 | 311.98 |
 | 481 | **11.71** | 138.85 | 182.23 |
 | 961 | **10.86** | 17.76 | 99.37 |
 
-FID, lower is better. Mean ± std over 3 seeds in the full report.
+Lower FID is better. Values are means over 3 seeds; standard deviations are reported in the paper.
 
-The gap is dramatic at intermediate budgets — at NFE 481, EM is roughly 12× better than PC(M=1). At the largest budget the gap narrows but doesn't close. Adding more corrector steps (M=2) consistently makes things worse, not better.
+The result suggests that, for this small MNIST VE-SDE model, the score evaluations spent on Langevin corrector steps were less useful than additional Euler–Maruyama predictor steps.
 
-My best guess for *why*: with a small score model trained briefly, the score function has meaningful error. The Langevin corrector runs MCMC toward the stationary distribution of the *learned* score, not the true one — so running it harder amplifies the error rather than correcting it. With a large, well-trained model (like the paper's CIFAR-10 setup) the score error is small enough that PC helps. With our setup it hurts.
+This should not be read as a general claim that PC sampling is worse than EM. It is a controlled result for this dataset, architecture, training budget, SDE, and evaluation setup.
 
-The full write-up explains this in more detail and discusses limitations.
+## Interpretation
+
+A plausible explanation is that the learned score model is imperfect. Langevin correction uses the learned score, so if the score has systematic error, extra corrector steps may move samples toward the distribution implied by the learned score rather than the true noisy data distribution. This could make corrector steps less useful, especially for a small model trained briefly.
+
+This explanation is only a hypothesis; the project does not directly measure score error.
 
 ## Repo structure
 
