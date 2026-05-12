@@ -10,7 +10,7 @@ But each Langevin step costs another neural-network evaluation, so PC trades com
 Does Predictor-Corrector still win when both samplers get the same compute budget?
 
 ## What I did
-- Trained a small (~1.6M param) U-Net on MNIST for 15 epochs using denoising score matching
+- Trained a small (~1.6M param) U-Net (convolutional neural network type) on MNIST for 15 epochs using denoising score matching
 - Implemented Euler-Maruyama to match the official code & Predictor-Corrector to match the paper's algorithm
 - Tuned the SNR hyperparameter for PC separately for `M=1` and `M=2` corrector steps
 - Compared Euler-Maruyama vs Predictor-Corrector (M=1) vs Predictor-Corrector (M=2) at four matched NFE budgets, 3 seeds each
