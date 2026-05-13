@@ -21,7 +21,7 @@ _Does Predictor–Corrector still outperform Euler–Maruyama when both samplers
   
 ## What I found
 
-**EM beats PC at every compute budget tested.** This is the opposite of the paper's CIFAR-10 result.
+**Euler-Maruyama beats PC at every compute budget tested.** This differs from the trend observed by Song et al. on CIFAR-10.
 
 | NFE | Euler-Maruyama | PC (M=1) | PC (M=2) |
 |----:|---:|---------:|---------:|
