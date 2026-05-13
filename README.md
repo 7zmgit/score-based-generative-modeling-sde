@@ -40,7 +40,7 @@ The gap is dramatic at intermediate budgets; at NFE 481, EM is roughly 12× bett
 
 My best guess for why: with a small score model trained briefly, the score function has meaningful error. The Langevin corrector runs MCMC toward the stationary distribution of the *learned* score, not the true one, so running it harder amplifies the error rather than correcting it. With a large, well-trained model (like the paper's CIFAR-10 setup) the score error is small enough that PC helps. With my setup, it hurts.
 
-In the report, I include more detail and discuss the limitations.
+In the report, I include more detail and discuss the limitations. A readable introduction to score-based generative models is Song's blog: https://yang-song.net/blog/2021/score/ 
 
 ---
 
@@ -62,5 +62,6 @@ pip install torch torchvision pytorch-fid tqdm matplotlib
 ## References
 
 - Song et al., *Score-Based Generative Modeling through Stochastic Differential Equations*, ICLR 2021. ([paper](https://arxiv.org/abs/2011.13456), [code](https://github.com/yang-song/score_sde_pytorch))
+- Song, *Generative Modeling by Estimating Gradients of the Data Distribution.* (blog) https://yang-song.net/blog/2021/score/ 
 - Anderson, *Reverse-time diffusion equation models*, Stoch. Process. Appl., 1982.
 - Vincent, *A connection between score matching and denoising autoencoders*, Neural Comp., 2011.
